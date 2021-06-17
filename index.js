@@ -1,15 +1,39 @@
 /**
  * Primary file for APIs
- *
  */
 
 // Dependencies
 var http = require('http');
+var https = require('https');
 var url = require('url');
 var StringDecoder = require('string_decoder').StringDecoder;
+var fs = require('fs');
 
-var server = http.createServer(function (req, res) {
+var config = require('./config');
 
+var httpServer = http.createServer(function (req, res) {
+    unifiedServer(req, res);
+});
+
+httpServer.listen(config.httpPort, function () {
+    console.log(`The server is running on ${config.httpPort} in ${config.envName} mode`);
+});
+
+var httpsServerOption = {
+    'key': fs.readFileSync('./https/key.pem'),
+    'cert': fs.readFileSync('./https/cert.pem')
+};
+
+var httpsServer = https.createServer(httpsServerOption, function (req, res) {
+    unifiedServer(req, res);
+});
+
+httpsServer.listen(config.httpsPort, function () {
+    console.log(`The server is running on ${config.httpsPort} in ${config.envName} mode`);
+});
+
+// All the server logic for both http and https server
+var unifiedServer = function (req, res) {
     var parsedUrl = url.parse(req.url, true);
 
     // Get the path
@@ -63,19 +87,14 @@ var server = http.createServer(function (req, res) {
             console.log("Returning this response - " + statusCode, payloadString);
         })
     })
-});
-
-server.listen(3000, function () {
-    console.log('The server is running on 3000');
-});
+}
 
 // Define the handler
 var handlers = {};
 
-// Sample handler
-handlers.sample = function (data, callback) {
-    // Callback a http request and payload object
-    callback(406, { 'name': 'Simple Handler' });
+// ping handler
+handlers.ping = function (data, callback) {
+    callback(200);
 }
 
 // Not Found handler
@@ -85,5 +104,5 @@ handlers.notFound = function (data, callback) {
 
 // Define a request router
 var router = {
-    'sample': handlers.sample
+    'ping': handlers.ping
 }
