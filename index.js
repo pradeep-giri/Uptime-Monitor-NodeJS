@@ -10,24 +10,29 @@ var StringDecoder = require('string_decoder').StringDecoder;
 var fs = require('fs');
 
 var config = require('./config');
+var handlers = require('./lib/handlers');
 
+
+// Instantiate the HTTP server
 var httpServer = http.createServer(function (req, res) {
     unifiedServer(req, res);
 });
 
+// Start the HTTP server
 httpServer.listen(config.httpPort, function () {
     console.log(`The server is running on ${config.httpPort} in ${config.envName} mode`);
 });
 
+// Instantiate the HTTPS server
 var httpsServerOption = {
     'key': fs.readFileSync('./https/key.pem'),
     'cert': fs.readFileSync('./https/cert.pem')
 };
-
 var httpsServer = https.createServer(httpsServerOption, function (req, res) {
     unifiedServer(req, res);
 });
 
+// Start the HTTPS server
 httpsServer.listen(config.httpsPort, function () {
     console.log(`The server is running on ${config.httpsPort} in ${config.envName} mode`);
 });
@@ -89,20 +94,8 @@ var unifiedServer = function (req, res) {
     })
 }
 
-// Define the handler
-var handlers = {};
-
-// ping handler
-handlers.ping = function (data, callback) {
-    callback(200);
-}
-
-// Not Found handler
-handlers.notFound = function (data, callback) {
-    callback(404);
-}
-
 // Define a request router
 var router = {
-    'ping': handlers.ping
+    'ping': handlers.ping,
+    'users': handlers.users
 }
